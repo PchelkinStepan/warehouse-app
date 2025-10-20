@@ -57,11 +57,11 @@ function App() {
     try {
       await addProduct(productData);
       setShowForm(false);
-      setAlertMessage('Товар успешно добавлен!');
+      setAlertMessage('Позиция успешно добавлена!');
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 3000);
     } catch (error) {
-      alert('Ошибка при добавлении товара: ' + error.message);
+      alert('Ошибка при добавлении позиции: ' + error.message);
     }
   };
 
@@ -69,11 +69,11 @@ function App() {
     try {
       await updateProduct(editingProduct.id, productData);
       setEditingProduct(null);
-      setAlertMessage('Товар успешно обновлен!');
+      setAlertMessage('Позиция успешно обновлена!');
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 3000);
     } catch (error) {
-      alert('Ошибка при обновлении товара: ' + error.message);
+      alert('Ошибка при обновлении позиции: ' + error.message);
     }
   };
 
@@ -106,11 +106,11 @@ function App() {
       try {
         await deleteProduct(deleteDialog.productId);
         setDeleteDialog({ open: false, productId: null, productName: '' });
-        setAlertMessage('Товар успешно удален!');
+        setAlertMessage('Позиция успешно удалена!');
         setShowAlert(true);
         setTimeout(() => setShowAlert(false), 3000);
       } catch (error) {
-        alert('Ошибка при удалении товара: ' + error.message);
+        alert('Ошибка при удалении позиции: ' + error.message);
       }
     } else {
       alert('Неверный пароль! Удаление отменено.');
@@ -141,7 +141,7 @@ function App() {
             color="primary"
             onClick={() => setShowForm(true)}
           >
-            + Добавить товар
+            + Добавить позицию
           </Button>
           
           <Button 
@@ -160,7 +160,7 @@ function App() {
         </Alert>
       )}
 
-      {/* Форма добавления нового товара */}
+      {/* Форма добавления новой позиции */}
       {showForm && (
         <ProductForm 
           onSubmit={handleAddProduct}
@@ -168,7 +168,7 @@ function App() {
         />
       )}
 
-      {/* Форма редактирования существующего товара */}
+      {/* Форма редактирования существующей позиции */}
       {editingProduct && (
         <ProductForm 
           onSubmit={handleEditProduct}
@@ -189,7 +189,7 @@ function App() {
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы уверены, что хотите удалить товар: <strong>"{deleteDialog.productName}"</strong>?
+            Вы уверены, что хотите удалить позицию: <strong>"{deleteDialog.productName}"</strong>?
           </Typography>
           <Typography variant="body2" color="error" sx={{ mt: 2 }}>
             Для подтверждения введите пароль:
@@ -231,7 +231,7 @@ function App() {
         <DialogTitle>Подтверждение редактирования</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы хотите редактировать товар: <strong>"{editDialog.product?.name}"</strong>?
+            Вы хотите редактировать позицию: <strong>"{editDialog.product?.name}"</strong>?
           </Typography>
           <Typography variant="body2" color="primary" sx={{ mt: 2 }}>
             Для подтверждения введите пароль:
@@ -271,7 +271,7 @@ function App() {
       {products.length === 0 && (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="textSecondary">
-            📭 Склад пуст. Добавьте первый товар!
+            📭 Склад пуст. Добавьте первую позицию!
           </Typography>
           <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
             Данные синхронизируются в реальном времени между всеми устройствами
@@ -282,7 +282,7 @@ function App() {
       {products.length > 0 && (
         <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Typography variant="body2" color="textSecondary">
-            💾 Товаров в базе: {products.length}
+            💾 Позиций в базе: {products.length}
           </Typography>
         </Box>
       )}

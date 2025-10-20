@@ -38,7 +38,7 @@ const ProductTable = ({ products, onDeleteProduct, onEditProduct }) => {
     <>
       <Paper elevation={2} sx={{ width: '100%', overflow: 'hidden' }}>
         <TableContainer sx={{ maxHeight: 600 }}>
-          <Table stickyHeader aria-label="таблица товаров">
+          <Table stickyHeader aria-label="таблица позиций">
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontWeight: 'bold', width: 80 }}>Фото</TableCell>
@@ -194,7 +194,7 @@ const ProductTable = ({ products, onDeleteProduct, onEditProduct }) => {
                       <IconButton 
                         size="small" 
                         color="primary"
-                        title="Редактировать товар"
+                        title="Редактировать позицию"
                         onClick={() => onEditProduct(product)}
                       >
                         <Edit fontSize="small" />
@@ -204,7 +204,7 @@ const ProductTable = ({ products, onDeleteProduct, onEditProduct }) => {
                         size="small" 
                         color="error"
                         onClick={() => onDeleteProduct(product.id, product.name)}
-                        title="Удалить товар"
+                        title="Удалить позицию"
                       >
                         <Delete fontSize="small" />
                       </IconButton>

@@ -42,6 +42,7 @@ const ProductForm = ({ onSubmit, onClose, initialData, isEditing = false }) => {
         quantity: '',
         supplier: '',
         arrivalDate: new Date().toISOString().split('T')[0],
+        expirationDate: '',
         notes: '',
         photo: null
       });
@@ -75,7 +76,7 @@ const ProductForm = ({ onSubmit, onClose, initialData, isEditing = false }) => {
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">
-            {isEditing ? '✏️ Редактировать товар' : 'Добавить новый товар'}
+            {isEditing ? '✏️ Редактировать позицию' : 'Добавить новую позицию'}
           </Typography>
           <IconButton onClick={onClose}>
             <Close />
@@ -91,7 +92,7 @@ const ProductForm = ({ onSubmit, onClose, initialData, isEditing = false }) => {
               <Box sx={{ flex: 1 }}>
                 <TextField
                   fullWidth
-                  label="Название товара *"
+                  label="Название позиции *"
                   value={formData.name}
                   onChange={handleChange('name')}
                   required
@@ -176,7 +177,7 @@ const ProductForm = ({ onSubmit, onClose, initialData, isEditing = false }) => {
               rows={3}
               value={formData.notes}
               onChange={handleChange('notes')}
-              placeholder="Описание товара, характеристики, особенности..."
+              placeholder="Описание позиции, характеристики, особенности..."
             />
           </Box>
         </DialogContent>
@@ -190,7 +191,7 @@ const ProductForm = ({ onSubmit, onClose, initialData, isEditing = false }) => {
             variant="contained" 
             disabled={!formData.name || !formData.quantity}
           >
-            {isEditing ? '💾 Сохранить изменения' : 'Добавить товар'}
+            {isEditing ? '💾 Сохранить изменения' : 'Добавить позицию'}
           </Button>
         </DialogActions>
       </form>
