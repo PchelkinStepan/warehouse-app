@@ -217,46 +217,90 @@ const ProductTable = ({ products, onDeleteProduct, onEditProduct }) => {
         </TableContainer>
       </Paper>
 
-      {/* Модальное окно для просмотра фото */}
+      {/* Модальное окно для просмотра фото - улучшенная версия */}
       <Dialog 
         open={!!selectedImage} 
         onClose={handleCloseImage}
-        maxWidth="lg"
+        maxWidth={false}
         fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            boxShadow: 'none',
+            maxWidth: '100vw',
+            maxHeight: '100vh',
+            margin: 0,
+            width: '100%',
+            height: '100%'
+          }
+        }}
+        sx={{
+          '& .MuiDialog-container': {
+            backdropFilter: 'blur(5px)'
+          }
+        }}
       >
-        <DialogContent sx={{ position: 'relative', p: 0 }}>
+        <DialogContent 
+          sx={{ 
+            position: 'relative', 
+            p: 0, 
+            margin: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.9)'
+          }}
+        >
           <MuiIconButton
             onClick={handleCloseImage}
             sx={{
               position: 'absolute',
-              top: 8,
-              right: 8,
-              backgroundColor: 'rgba(0,0,0,0.5)',
+              top: 16,
+              right: 16,
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
               color: 'white',
               zIndex: 1,
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               '&:hover': {
-                backgroundColor: 'rgba(0,0,0,0.7)'
-              }
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                transform: 'scale(1.1)'
+              },
+              transition: 'all 0.3s ease'
             }}
           >
             <Close />
           </MuiIconButton>
           
           {selectedImage && (
-            <Box sx={{ textAlign: 'center', p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                {selectedImage.productName}
-              </Typography>
+            <Box 
+              sx={{ 
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                height: '100%',
+                padding: 2
+              }}
+            >
               <Box
                 component="img"
                 src={selectedImage.photo}
                 alt={selectedImage.productName}
                 sx={{
-                  maxWidth: '100%',
-                  maxHeight: '80vh',
+                  maxWidth: '95%',
+                  maxHeight: '95%',
                   objectFit: 'contain',
-                  borderRadius: 1
+                  borderRadius: 1,
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+                  transition: 'transform 0.3s ease',
+                  '&:hover': {
+                    transform: 'scale(1.02)'
+                  }
                 }}
+                onClick={handleCloseImage}
               />
             </Box>
           )}

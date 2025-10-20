@@ -379,7 +379,7 @@ function App() {
             flexWrap: 'wrap'
           }}
         >
-          <span>Автор: </span>
+          <span>Разработчик: </span>
           <Box 
             component="a"
             href="https://t.me/step3395509"
