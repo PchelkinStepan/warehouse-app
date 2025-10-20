@@ -39,6 +39,10 @@ function App() {
     open: false,
     product: null
   });
+  const [addDialog, setAddDialog] = useState({
+    open: false
+  });
+  const [pendingProductData, setPendingProductData] = useState(null);
 
   // Подписываемся на обновления товаров из Firebase
   useEffect(() => {
@@ -62,6 +66,21 @@ function App() {
       setTimeout(() => setShowAlert(false), 3000);
     } catch (error) {
       alert('Ошибка при добавлении позиции: ' + error.message);
+    }
+  };
+
+  const openAddDialog = () => {
+    setAddDialog({
+      open: true
+    });
+  };
+
+  const handleAddAuth = (password) => {
+    if (password === '3395509') {
+      setAddDialog({ open: false });
+      setShowForm(true);
+    } else {
+      alert('Неверный пароль! Добавление отменено.');
     }
   };
 
@@ -139,7 +158,7 @@ function App() {
           <Button 
             variant="contained" 
             color="primary"
-            onClick={() => setShowForm(true)}
+            onClick={openAddDialog}
           >
             + Добавить позицию
           </Button>
@@ -183,6 +202,48 @@ function App() {
         onDeleteProduct={openDeleteDialog}
         onEditProduct={openEditDialog}
       />
+
+      {/* Диалог подтверждения добавления */}
+      <Dialog open={addDialog.open} onClose={() => setAddDialog({ open: false })}>
+        <DialogTitle>Подтверждение добавления</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Вы хотите добавить новую позицию в базу данных?
+          </Typography>
+          <Typography variant="body2" color="primary" sx={{ mt: 2 }}>
+            Для подтверждения введите пароль:
+          </Typography>
+          <TextField
+            autoFocus
+            margin="dense"
+            type="password"
+            fullWidth
+            variant="outlined"
+            placeholder="Введите пароль"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleAddAuth(e.target.value);
+              }
+            }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddDialog({ open: false })}>
+            Отмена
+          </Button>
+          <Button 
+            onClick={() => {
+              const passwordInput = document.querySelector('input[type="password"]');
+              handleAddAuth(passwordInput.value);
+            }} 
+            color="primary"
+            variant="contained"
+          >
+            Добавить
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Диалог подтверждения удаления */}
       <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, productId: null, productName: '' })}>
