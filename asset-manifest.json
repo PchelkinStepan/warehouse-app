@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/warehouse-app/static/css/main.86b3614d.css",
-    "main.js": "/warehouse-app/static/js/main.cc39e8be.js",
+    "main.js": "/warehouse-app/static/js/main.23b422fa.js",
     "index.html": "/warehouse-app/index.html",
     "main.86b3614d.css.map": "/warehouse-app/static/css/main.86b3614d.css.map",
-    "main.cc39e8be.js.map": "/warehouse-app/static/js/main.cc39e8be.js.map"
+    "main.23b422fa.js.map": "/warehouse-app/static/js/main.23b422fa.js.map"
   },
   "entrypoints": [
     "static/css/main.86b3614d.css",
-    "static/js/main.cc39e8be.js"
+    "static/js/main.23b422fa.js"
   ]
 }
