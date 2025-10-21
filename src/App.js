@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Dashboard from './components/Dashboard/Dashboard';
 import ProductForm from './components/ProductForm/ProductForm';
 import ProductTable from './components/ProductTable/ProductTable';
 import { 
@@ -12,7 +13,12 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  CircularProgress
+  CircularProgress,
+  Tabs,
+  Tab,
+  Chip,
+  Breadcrumbs,
+  Link
 } from '@mui/material';
 import { exportToExcel } from './utils/excelExport';
 import { 
@@ -25,11 +31,13 @@ import './App.css';
 
 function App() {
   const [products, setProducts] = useState([]);
+  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'warehouse'
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [deleteDialog, setDeleteDialog] = useState({
     open: false,
     productId: null,
@@ -42,7 +50,6 @@ function App() {
   const [addDialog, setAddDialog] = useState({
     open: false
   });
-  const [pendingProductData, setPendingProductData] = useState(null);
 
   // Подписываемся на обновления товаров из Firebase
   useEffect(() => {
@@ -53,9 +60,36 @@ function App() {
       setLoading(false);
     });
 
-    // Отписываемся при размонтировании компонента
     return () => unsubscribe();
   }, []);
+
+  // Получаем уникальные категории из продуктов
+  const categories = React.useMemo(() => {
+    const allCategories = products
+      .map(product => product.category)
+      .filter(category => category && category.trim() !== '');
+    
+    const uniqueCategories = [...new Set(allCategories)].sort();
+    return uniqueCategories;
+  }, [products]);
+
+  // Фильтруем продукты по выбранной категории
+  const filteredProducts = React.useMemo(() => {
+    if (selectedCategory === 'all') {
+      return products;
+    }
+    return products.filter(product => product.category === selectedCategory);
+  }, [products, selectedCategory]);
+
+  // Навигация
+  const handleNavigate = (view) => {
+    setCurrentView(view);
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentView('dashboard');
+    setSelectedCategory('all');
+  };
 
   const handleAddProduct = async (productData) => {
     try {
@@ -66,21 +100,6 @@ function App() {
       setTimeout(() => setShowAlert(false), 3000);
     } catch (error) {
       alert('Ошибка при добавлении позиции: ' + error.message);
-    }
-  };
-
-  const openAddDialog = () => {
-    setAddDialog({
-      open: true
-    });
-  };
-
-  const handleAddAuth = (password) => {
-    if (password === '3395509') {
-      setAddDialog({ open: false });
-      setShowForm(true);
-    } else {
-      alert('Неверный пароль! Добавление отменено.');
     }
   };
 
@@ -136,6 +155,19 @@ function App() {
     }
   };
 
+  const handleAddAuth = (password) => {
+    if (password === '3395509') {
+      setAddDialog({ open: false });
+      setShowForm(true);
+    } else {
+      alert('Неверный пароль! Добавление отменено.');
+    }
+  };
+
+  const handleCategoryChange = (event, newValue) => {
+    setSelectedCategory(newValue);
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ py: 4, textAlign: 'center' }}>
@@ -149,29 +181,68 @@ function App() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h3" component="h1">
-          📦 Учет склада
-        </Typography>
-        
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button 
-            variant="contained" 
-            color="primary"
-            onClick={openAddDialog}
-          >
-            + Добавить позицию
-          </Button>
-          
-          <Button 
-            variant="contained"
-            onClick={() => exportToExcel(products)}
-            disabled={products.length === 0}
-          >
-            📊 Выгрузить в Excel
-          </Button>
+      {/* Хлебные крошки для навигации - контрастный вариант */}
+      {currentView !== 'dashboard' && (
+        <Box sx={{ mb: 3 }}>
+          <Breadcrumbs aria-label="breadcrumb">
+            <Link
+              component="button"
+              variant="body1"
+              onClick={handleBackToDashboard}
+              sx={{ 
+                cursor: 'pointer',
+                fontWeight: 600,
+                color: 'common.white',
+                textDecoration: 'none',
+                fontSize: '1rem',
+                textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                '&:hover': {
+                  textDecoration: 'underline',
+                  color: 'primary.light'
+                }
+              }}
+            >
+              🏠 Главная
+            </Link>
+            <Typography 
+              color="common.white" 
+              sx={{ 
+                fontWeight: 600, 
+                fontSize: '1rem',
+                textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+              }}
+            >
+              {currentView === 'warehouse' ? '📦 Склад' : currentView}
+            </Typography>
+          </Breadcrumbs>
         </Box>
-      </Box>
+      )}
+      {/* Заголовок и кнопки действий */}
+      {currentView === 'warehouse' && (
+        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h3" component="h1">
+            📦 Склад
+          </Typography>
+          
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button 
+              variant="contained" 
+              color="primary"
+              onClick={() => setAddDialog({ open: true })}
+            >
+              + Добавить позицию
+            </Button>
+            
+            <Button 
+              variant="contained"
+              onClick={() => exportToExcel(filteredProducts)}
+              disabled={filteredProducts.length === 0}
+            >
+              📊 Выгрузить в Excel
+            </Button>
+          </Box>
+        </Box>
+      )}
 
       {showAlert && (
         <Alert severity="success" sx={{ mb: 2 }}>
@@ -179,7 +250,135 @@ function App() {
         </Alert>
       )}
 
-      {/* Форма добавления новой позиции */}
+      {/* Основной контент */}
+      {currentView === 'dashboard' ? (
+        <Dashboard 
+          onNavigate={handleNavigate}
+          products={products}
+        />
+      ) : currentView === 'warehouse' ? (
+        <>
+          {/* Вкладки категорий */}
+          <Box sx={{ 
+            borderBottom: 1, 
+            borderColor: 'divider', 
+            mb: 3,
+            backgroundColor: 'white',
+            borderRadius: 2,
+            px: 2,
+            boxShadow: 1
+          }}>
+            <Tabs 
+              value={selectedCategory} 
+              onChange={handleCategoryChange}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                '& .MuiTab-root': {
+                  fontWeight: 'bold',
+                  fontSize: '0.9rem',
+                  minHeight: 48,
+                  color: 'text.primary',
+                  opacity: 0.7,
+                  '&.Mui-selected': {
+                    color: 'primary.main',
+                    opacity: 1,
+                    fontWeight: 'bold'
+                  },
+                  '&:hover': {
+                    color: 'primary.main',
+                    opacity: 0.9
+                  }
+                },
+                '& .MuiTabs-indicator': {
+                  backgroundColor: 'primary.main',
+                  height: 3
+                }
+              }}
+            >
+              <Tab 
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <span>Все</span>
+                    <Chip 
+                      label={products.length} 
+                      size="small" 
+                      color="primary"
+                      variant="filled"
+                      sx={{ fontWeight: 'bold', fontSize: '0.75rem' }}
+                    />
+                  </Box>
+                } 
+                value="all" 
+              />
+              {categories.map((category) => (
+                <Tab 
+                  key={category}
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <span>{category}</span>
+                      <Chip 
+                        label={products.filter(p => p.category === category).length} 
+                        size="small" 
+                        color="primary"
+                        variant="filled"
+                        sx={{ fontWeight: 'bold', fontSize: '0.75rem' }}
+                      />
+                    </Box>
+                  } 
+                  value={category} 
+                />
+              ))}
+            </Tabs>
+          </Box>
+
+          {/* Таблица товаров */}
+          <ProductTable 
+            products={filteredProducts}
+            onDeleteProduct={openDeleteDialog}
+            onEditProduct={openEditDialog}
+          />
+
+          {/* Сообщение когда нет данных */}
+          {filteredProducts.length === 0 && (
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <Typography variant="h6" color="textSecondary">
+                {selectedCategory === 'all' ? '📭 Склад пуст. Добавьте первую позицию!' : `📭 В категории "${selectedCategory}" пока нет позиций`}
+              </Typography>
+              <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                Данные синхронизируются в реальном времени между всеми устройствами
+              </Typography>
+            </Box>
+          )}
+
+          {filteredProducts.length > 0 && (
+            <Box sx={{ mt: 2, textAlign: 'center' }}>
+              <Typography variant="body2" color="textSecondary">
+                💾 Показано: {filteredProducts.length} из {products.length} позиций
+                {selectedCategory !== 'all' && ` в категории "${selectedCategory}"`}
+              </Typography>
+            </Box>
+          )}
+        </>
+      ) : (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h4" gutterBottom>
+            🚧 Раздел в разработке
+          </Typography>
+          <Typography variant="body1" color="textSecondary">
+            Этот функционал появится в ближайших обновлениях
+          </Typography>
+          <Button 
+            variant="contained" 
+            sx={{ mt: 2 }}
+            onClick={handleBackToDashboard}
+          >
+            ← Назад на главную
+          </Button>
+        </Box>
+      )}
+
+      {/* Формы */}
       {showForm && (
         <ProductForm 
           onSubmit={handleAddProduct}
@@ -187,7 +386,6 @@ function App() {
         />
       )}
 
-      {/* Форма редактирования существующей позиции */}
       {editingProduct && (
         <ProductForm 
           onSubmit={handleEditProduct}
@@ -197,13 +395,7 @@ function App() {
         />
       )}
 
-      <ProductTable 
-        products={products}
-        onDeleteProduct={openDeleteDialog}
-        onEditProduct={openEditDialog}
-      />
-
-      {/* Диалог подтверждения добавления */}
+      {/* Диалоги с паролями */}
       <Dialog open={addDialog.open} onClose={() => setAddDialog({ open: false })}>
         <DialogTitle>Подтверждение добавления</DialogTitle>
         <DialogContent>
@@ -245,7 +437,6 @@ function App() {
         </DialogActions>
       </Dialog>
 
-      {/* Диалог подтверждения удаления */}
       <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, productId: null, productName: '' })}>
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
@@ -287,7 +478,6 @@ function App() {
         </DialogActions>
       </Dialog>
 
-      {/* Диалог подтверждения редактирования */}
       <Dialog open={editDialog.open} onClose={() => setEditDialog({ open: false, product: null })}>
         <DialogTitle>Подтверждение редактирования</DialogTitle>
         <DialogContent>
@@ -329,26 +519,7 @@ function App() {
         </DialogActions>
       </Dialog>
 
-      {products.length === 0 && (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="h6" color="textSecondary">
-            📭 Склад пуст. Добавьте первую позицию!
-          </Typography>
-          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-            Данные синхронизируются в реальном времени между всеми устройствами
-          </Typography>
-        </Box>
-      )}
-
-      {products.length > 0 && (
-        <Box sx={{ mt: 2, textAlign: 'center' }}>
-          <Typography variant="body2" color="textSecondary">
-            💾 Позиций в базе: {products.length}
-          </Typography>
-        </Box>
-      )}
-
-      {/* Стильный копирайт */}
+      {/* Копирайт */}
       <Box 
         sx={{ 
           mt: 6, 
@@ -379,7 +550,7 @@ function App() {
             flexWrap: 'wrap'
           }}
         >
-          <span>Разработчик: </span>
+          <span>Автор: </span>
           <Box 
             component="a"
             href="https://t.me/step3395509"
