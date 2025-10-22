@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Dashboard from './components/Dashboard/Dashboard';
 import ProductForm from './components/ProductForm/ProductForm';
 import ProductTable from './components/ProductTable/ProductTable';
+import NeedsTable from './components/NeedsTable/NeedsTable';
+import NeedsForm from './components/NeedsForm/NeedsForm';
 import { 
   Button, 
   Container, 
@@ -18,7 +20,8 @@ import {
   Tab,
   Chip,
   Breadcrumbs,
-  Link
+  Link,
+  Grid
 } from '@mui/material';
 import { exportToExcel } from './utils/excelExport';
 import { 
@@ -27,16 +30,25 @@ import {
   updateProduct, 
   deleteProduct 
 } from './firebase/productsService';
+import { 
+  subscribeToNeeds, 
+  addNeed, 
+  updateNeed, 
+  deleteNeed 
+} from './firebase/needsService';
 import './App.css';
 
 function App() {
   const [products, setProducts] = useState([]);
-  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'warehouse'
+  const [needs, setNeeds] = useState([]);
+  const [currentView, setCurrentView] = useState('dashboard');
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [editingNeed, setEditingNeed] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [needsLoading, setNeedsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [deleteDialog, setDeleteDialog] = useState({
     open: false,
@@ -50,6 +62,18 @@ function App() {
   const [addDialog, setAddDialog] = useState({
     open: false
   });
+  const [needsDeleteDialog, setNeedsDeleteDialog] = useState({
+    open: false,
+    needId: null,
+    needName: ''
+  });
+  const [needsEditDialog, setNeedsEditDialog] = useState({
+    open: false,
+    need: null
+  });
+  const [needsAddDialog, setNeedsAddDialog] = useState({
+    open: false
+  });
 
   // Подписываемся на обновления товаров из Firebase
   useEffect(() => {
@@ -58,6 +82,18 @@ function App() {
     const unsubscribe = subscribeToProducts((productsData) => {
       setProducts(productsData);
       setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Подписываемся на обновления потребностей из Firebase
+  useEffect(() => {
+    setNeedsLoading(true);
+    
+    const unsubscribe = subscribeToNeeds((needsData) => {
+      setNeeds(needsData);
+      setNeedsLoading(false);
     });
 
     return () => unsubscribe();
@@ -91,6 +127,7 @@ function App() {
     setSelectedCategory('all');
   };
 
+  // Обработчики для товаров
   const handleAddProduct = async (productData) => {
     try {
       await addProduct(productData);
@@ -164,11 +201,85 @@ function App() {
     }
   };
 
+  // Обработчики для покупок
+  const handleAddNeed = async (needData) => {
+    try {
+      await addNeed(needData);
+      setShowForm(false);
+      setAlertMessage('Покупка успешно добавлена!');
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
+    } catch (error) {
+      alert('Ошибка при добавлении покупки: ' + error.message);
+    }
+  };
+
+  const handleEditNeed = async (needData) => {
+    try {
+      await updateNeed(editingNeed.id, needData);
+      setEditingNeed(null);
+      setAlertMessage('Покупка успешно обновлена!');
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
+    } catch (error) {
+      alert('Ошибка при обновлении покупки: ' + error.message);
+    }
+  };
+
+  const openNeedsEditDialog = (need) => {
+    setNeedsEditDialog({
+      open: true,
+      need
+    });
+  };
+
+  const handleNeedsEditAuth = (password) => {
+    if (password === '3395509') {
+      setEditingNeed(needsEditDialog.need);
+      setNeedsEditDialog({ open: false, need: null });
+    } else {
+      alert('Неверный пароль! Редактирование отменено.');
+    }
+  };
+
+  const openNeedsDeleteDialog = (needId, needName) => {
+    setNeedsDeleteDialog({
+      open: true,
+      needId,
+      needName
+    });
+  };
+
+  const handleDeleteNeed = async (password) => {
+    if (password === '3395509') {
+      try {
+        await deleteNeed(needsDeleteDialog.needId);
+        setNeedsDeleteDialog({ open: false, needId: null, needName: '' });
+        setAlertMessage('Покупка успешно удалена!');
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 3000);
+      } catch (error) {
+        alert('Ошибка при удалении покупки: ' + error.message);
+      }
+    } else {
+      alert('Неверный пароль! Удаление отменено.');
+    }
+  };
+
+  const handleNeedsAddAuth = (password) => {
+    if (password === '3395509') {
+      setNeedsAddDialog({ open: false });
+      setShowForm(true);
+    } else {
+      alert('Неверный пароль! Добавление отменено.');
+    }
+  };
+
   const handleCategoryChange = (event, newValue) => {
     setSelectedCategory(newValue);
   };
 
-  if (loading) {
+  if (loading && currentView !== 'needs') {
     return (
       <Container maxWidth="lg" sx={{ py: 4, textAlign: 'center' }}>
         <CircularProgress size={60} />
@@ -181,7 +292,7 @@ function App() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Хлебные крошки для навигации - контрастный вариант */}
+      {/* Хлебные крошки для навигации */}
       {currentView !== 'dashboard' && (
         <Box sx={{ mb: 3 }}>
           <Breadcrumbs aria-label="breadcrumb">
@@ -212,12 +323,14 @@ function App() {
                 textShadow: '0 1px 2px rgba(0,0,0,0.3)'
               }}
             >
-              {currentView === 'warehouse' ? '📦 Склад' : currentView}
+              {currentView === 'warehouse' ? '📦 Склад' : 
+               currentView === 'needs' ? '🛒 Купить в лабораторию' : currentView}
             </Typography>
           </Breadcrumbs>
         </Box>
       )}
-      {/* Заголовок и кнопки действий */}
+
+      {/* Заголовок и кнопки действий для склада */}
       {currentView === 'warehouse' && (
         <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h3" component="h1">
@@ -244,6 +357,25 @@ function App() {
         </Box>
       )}
 
+      {/* Заголовок и кнопки действий для "Купить в лабораторию" */}
+      {currentView === 'needs' && (
+        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h3" component="h1">
+            🛒 Купить в лабораторию
+          </Typography>
+          
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button 
+              variant="contained" 
+              color="primary"
+              onClick={() => setNeedsAddDialog({ open: true })}
+            >
+              ➕ Добавить покупку
+            </Button>
+          </Box>
+        </Box>
+      )}
+
       {showAlert && (
         <Alert severity="success" sx={{ mb: 2 }}>
           {alertMessage}
@@ -255,6 +387,7 @@ function App() {
         <Dashboard 
           onNavigate={handleNavigate}
           products={products}
+          needsCount={needs.length}
         />
       ) : currentView === 'warehouse' ? (
         <>
@@ -360,6 +493,74 @@ function App() {
             </Box>
           )}
         </>
+      ) : currentView === 'needs' ? (
+        <>
+          {/* Статистика покупок */}
+          <Box sx={{ mb: 3, p: 2, backgroundColor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="primary.main">
+                    {needs.filter(n => n.status === 'pending').length}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    ⏳ Ожидают покупки
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="info.main">
+                    {needs.filter(n => n.status === 'ordered').length}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    📦 Заказано
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="success.main">
+                    {needs.filter(n => n.status === 'received').length}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    ✅ Получено
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
+
+          {/* Таблица покупок */}
+          {needsLoading ? (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <CircularProgress />
+              <Typography variant="h6" sx={{ mt: 2 }}>
+                Загрузка списка покупок...
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              <NeedsTable 
+                needs={needs}
+                onDeleteNeed={openNeedsDeleteDialog}
+                onEditNeed={openNeedsEditDialog}
+              />
+
+              {/* Сообщение когда нет данных */}
+              {needs.length === 0 && (
+                <Box sx={{ textAlign: 'center', py: 8 }}>
+                  <Typography variant="h6" color="textSecondary">
+                    📝 Список покупок пуст. Добавьте первую запись!
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                    Отслеживайте что нужно купить для лаборатории
+                  </Typography>
+                </Box>
+              )}
+            </>
+          )}
+        </>
       ) : (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h4" gutterBottom>
@@ -378,8 +579,8 @@ function App() {
         </Box>
       )}
 
-      {/* Формы */}
-      {showForm && (
+      {/* Формы для товаров */}
+      {showForm && currentView === 'warehouse' && (
         <ProductForm 
           onSubmit={handleAddProduct}
           onClose={() => setShowForm(false)}
@@ -395,7 +596,24 @@ function App() {
         />
       )}
 
-      {/* Диалоги с паролями */}
+      {/* Формы для покупок */}
+      {showForm && currentView === 'needs' && (
+        <NeedsForm 
+          onSubmit={handleAddNeed}
+          onClose={() => setShowForm(false)}
+        />
+      )}
+
+      {editingNeed && (
+        <NeedsForm 
+          onSubmit={handleEditNeed}
+          onClose={() => setEditingNeed(null)}
+          initialData={editingNeed}
+          isEditing={true}
+        />
+      )}
+
+      {/* Диалоги с паролями для товаров */}
       <Dialog open={addDialog.open} onClose={() => setAddDialog({ open: false })}>
         <DialogTitle>Подтверждение добавления</DialogTitle>
         <DialogContent>
@@ -510,6 +728,130 @@ function App() {
             onClick={() => {
               const passwordInput = document.querySelector('input[type="password"]');
               handleEditAuth(passwordInput.value);
+            }} 
+            color="primary"
+            variant="contained"
+          >
+            Редактировать
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Диалоги с паролями для покупок */}
+      <Dialog open={needsAddDialog.open} onClose={() => setNeedsAddDialog({ open: false })}>
+        <DialogTitle>Подтверждение добавления</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Вы хотите добавить новую покупку в лабораторию?
+          </Typography>
+          <Typography variant="body2" color="primary" sx={{ mt: 2 }}>
+            Для подтверждения введите пароль:
+          </Typography>
+          <TextField
+            autoFocus
+            margin="dense"
+            type="password"
+            fullWidth
+            variant="outlined"
+            placeholder="Введите пароль"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleNeedsAddAuth(e.target.value);
+              }
+            }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setNeedsAddDialog({ open: false })}>
+            Отмена
+          </Button>
+          <Button 
+            onClick={() => {
+              const passwordInput = document.querySelector('input[type="password"]');
+              handleNeedsAddAuth(passwordInput.value);
+            }} 
+            color="primary"
+            variant="contained"
+          >
+            Добавить
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={needsDeleteDialog.open} onClose={() => setNeedsDeleteDialog({ open: false, needId: null, needName: '' })}>
+        <DialogTitle>Подтверждение удаления</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Вы уверены, что хотите удалить покупку: <strong>"{needsDeleteDialog.needName}"</strong>?
+          </Typography>
+          <Typography variant="body2" color="error" sx={{ mt: 2 }}>
+            Для подтверждения введите пароль:
+          </Typography>
+          <TextField
+            autoFocus
+            margin="dense"
+            type="password"
+            fullWidth
+            variant="outlined"
+            placeholder="Введите пароль"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleDeleteNeed(e.target.value);
+              }
+            }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setNeedsDeleteDialog({ open: false, needId: null, needName: '' })}>
+            Отмена
+          </Button>
+          <Button 
+            onClick={() => {
+              const passwordInput = document.querySelector('input[type="password"]');
+              handleDeleteNeed(passwordInput.value);
+            }} 
+            color="error"
+            variant="contained"
+          >
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={needsEditDialog.open} onClose={() => setNeedsEditDialog({ open: false, need: null })}>
+        <DialogTitle>Подтверждение редактирования</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Вы хотите редактировать покупку: <strong>"{needsEditDialog.need?.name}"</strong>?
+          </Typography>
+          <Typography variant="body2" color="primary" sx={{ mt: 2 }}>
+            Для подтверждения введите пароль:
+          </Typography>
+          <TextField
+            autoFocus
+            margin="dense"
+            type="password"
+            fullWidth
+            variant="outlined"
+            placeholder="Введите пароль"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleNeedsEditAuth(e.target.value);
+              }
+            }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setNeedsEditDialog({ open: false, need: null })}>
+            Отмена
+          </Button>
+          <Button 
+            onClick={() => {
+              const passwordInput = document.querySelector('input[type="password"]');
+              handleNeedsEditAuth(passwordInput.value);
             }} 
             color="primary"
             variant="contained"

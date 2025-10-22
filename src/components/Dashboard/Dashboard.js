@@ -13,7 +13,7 @@ import {
   ShoppingCart
 } from '@mui/icons-material';
 
-const Dashboard = ({ onNavigate, products }) => {
+const Dashboard = ({ onNavigate, products, needsCount = 0 }) => {
   const cards = [
     {
       id: 'warehouse',
@@ -26,12 +26,12 @@ const Dashboard = ({ onNavigate, products }) => {
     },
     {
       id: 'needs',
-      title: '🛒 Что нужно',
+      title: '🛒 Купить в лабораторию',
       description: 'Список необходимых закупок',
       icon: <ShoppingCart sx={{ fontSize: 48, color: 'success.main' }} />,
       color: 'success',
-      stats: '0 товаров',
-      disabled: true
+      stats: `${needsCount} покупок`,
+      disabled: false
     }
   ];
 
