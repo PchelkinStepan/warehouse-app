@@ -38,7 +38,7 @@ const Dashboard = ({ onNavigate, products, needsCount = 0 }) => {
   return (
     <Box>
       <Typography variant="h3" component="h1" gutterBottom sx={{ mb: 4 }}>
-        🏠 Главная панель
+        🏠 Панель управления
       </Typography>
 
       <Grid container spacing={3}>

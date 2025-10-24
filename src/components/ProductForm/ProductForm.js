@@ -34,6 +34,9 @@ const ProductForm = ({ onSubmit, onClose, initialData, isEditing = false }) => {
     
     onSubmit(productData);
     
+    // ЗАКРЫВАЕМ ФОРМУ ПОСЛЕ УСПЕШНОГО СОХРАНЕНИЯ
+    onClose();
+    
     // Сбрасываем форму только если это не редактирование
     if (!isEditing) {
       setFormData({
@@ -76,7 +79,7 @@ const ProductForm = ({ onSubmit, onClose, initialData, isEditing = false }) => {
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">
-            {isEditing ? '✏️ Редактировать позицию' : 'Добавить новую позицию'}
+            {isEditing ? '✏️ Редактировать позицию' : '➕ Добавить новую позицию'}
           </Typography>
           <IconButton onClick={onClose}>
             <Close />
@@ -191,7 +194,7 @@ const ProductForm = ({ onSubmit, onClose, initialData, isEditing = false }) => {
             variant="contained" 
             disabled={!formData.name || !formData.quantity}
           >
-            {isEditing ? '💾 Сохранить изменения' : 'Добавить позицию'}
+            {isEditing ? '💾 Сохранить изменения' : '➕ Добавить позицию'}
           </Button>
         </DialogActions>
       </form>
