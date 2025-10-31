@@ -32,7 +32,7 @@ const Dashboard = ({ onNavigate, products, needsCount = 0 }) => {
       color: 'success',
       stats: `${needsCount} покупок`,
       disabled: false
-    }
+    },
   ];
 
   return (
